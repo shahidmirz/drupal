@@ -1,0 +1,30 @@
+li {
+  display: inline-block;
+  margin: 16px;
+}
+
+ul {
+  margin-left: 320px;
+}
+
+a {
+  color: white;
+}
+
+.timeline {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.timeline-image {
+  margin-left: 450px;
+  margin-top: 12px;
+  margin-bottom: 20px;
+}
+
+.service-icon img {
+  border-radius: 50%;
+  border: 2px solid;
+  height: 100px;
+  wi dth: 100px;
+}

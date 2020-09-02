@@ -1,0 +1,13 @@
+name: Paragraphs Button
+type: module
+description: Control Paragraphs "Add more" button on Top or Bottom
+core: 8.x
+core_version_requirement: ^8 || ^9
+package: Paragraphs
+dependencies:
+  - paragraphs:paragraphs
+
+# Information added by Drupal.org packaging script on 2020-06-09
+version: '8.x-1.1'
+project: 'paragraphs_button'
+datestamp: 1591675839

@@ -1,0 +1,11 @@
+<?php
+
+
+function custom_preprocess_field(&$vars) {
+	$image_field = ['field_about_img1','field_about_img2','field_about_img3','field_about_img4','field_about_icon'];
+  if ( in_array( $vars['element']['#field_name'], $image_field ) ) {
+    foreach($vars['items'] as $key => $item){
+      $vars['items'][ $key ]['content']['#item_attributes']['class'][] = 'rounded-circle';
+    }
+  }
+}

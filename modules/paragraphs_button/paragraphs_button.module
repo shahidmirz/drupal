@@ -1,0 +1,240 @@
+<?php
+
+use Drupal\Core\Field\FieldDefinitionInterface;
+/**
+ * @file
+ * Paragraphs Button module file.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Field\WidgetInterface;
+use Drupal\Component\Utility\NestedArray;
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Template\Attribute;
+use Drupal\Core\Render\Element;
+
+/**
+ * {@inheritdoc}
+ */
+function paragraphs_button_field_widget_multivalue_form_alter(array &$elements, FormStateInterface $form_state, array $context) {
+
+  $pluginId = $context['widget']->getPluginId();
+
+  if ($pluginId == 'entity_reference_paragraphs' || $pluginId == 'paragraphs') {
+
+    if ($context['widget']->getSetting('add_mode') == 'button' || $context['widget']->getSetting('add_mode') == 'dropdown') {
+
+      $paragraphs_button_setting = $context['widget']->getThirdPartySetting('paragraphs_button', 'paragraphs_button_setting');
+
+      if ($paragraphs_button_setting == 'top') {
+        if (isset($elements['add_more'])) {
+
+          foreach ($elements['add_more'] as $key => $value) {
+            if (preg_match('/add_more_button_/is', $key)) {
+
+              $elements['add_more'][$key]['#ajax']['callback'] = 'paragraphs_button_add_more_ajax';
+              $elements['#theme'] = 'paragraphs_button_field_multiple_value_form';
+
+            }
+          }
+        }
+      }
+
+    }
+
+  }
+
+}
+
+/**
+ * Implements hook_theme().
+ */
+function paragraphs_button_theme($existing, $type, $theme, $path) {
+  $templates = $path . '/templates';
+
+  $return['paragraphs_button_field_multiple_value_form'] = [
+    'render element' => 'element',
+    'path' => $templates,
+  ];
+  return $return;
+}
+
+/**
+ * Prepares variables for individual form element templates.
+ *
+ * Default template: field-multiple-value-form.html.twig.
+ *
+ * Combines multiple values into a table with drag-n-drop reordering.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - element: A render element representing the form element.
+ */
+function template_preprocess_paragraphs_button_field_multiple_value_form(array &$variables) {
+  $element = $variables['element'];
+  $variables['multiple'] = $element['#cardinality_multiple'];
+  $variables['attributes'] = $element['#attributes'];
+
+  if ($variables['multiple']) {
+    $table_id = Html::getUniqueId($element['#field_name'] . '_values');
+    $order_class = $element['#field_name'] . '-delta-order';
+    $header_attributes = new Attribute(['class' => ['label']]);
+    if (!empty($element['#required'])) {
+      $header_attributes['class'][] = 'js-form-required';
+      $header_attributes['class'][] = 'form-required';
+    }
+    $header = [
+      [
+        'data' => [
+          '#prefix' => '<h4' . $header_attributes . '>',
+          '#markup' => $element['#title'],
+          '#suffix' => '</h4>',
+        ],
+        'colspan' => 2,
+        'class' => ['field-label'],
+      ],
+      t('Order', [], ['context' => 'Sort order']),
+    ];
+    $rows = [];
+
+    // Sort items according to '_weight' (needed when the form comes back after
+    // preview or failed validation).
+    $items = [];
+    $variables['button'] = [];
+    foreach (Element::children($element) as $key) {
+      if ($key === 'add_more') {
+        $variables['button'] = &$element[$key];
+      }
+      else {
+        $items[] = &$element[$key];
+      }
+    }
+    usort($items, '_field_multiple_value_form_sort_helper');
+
+    if (isset($GLOBALS['paragraphs_add_more_js_top']) && count($items) > 1) {
+
+      end($items);
+      $last_key = key($items);
+
+      $items[$last_key]['_weight']['#value'] = -1 * $items[$last_key]['_weight']['#value'];
+      $items[$last_key]['_weight']['#default_value'] = -1 * $items[$last_key]['_weight']['#default_value'];
+
+      $last_value = array_pop($items);
+
+      $items = array_merge([$last_key => $last_value], $items);
+
+      unset($GLOBALS['paragraphs_add_more_js_top']);
+    }
+
+    // Add the items as table rows.
+    foreach ($items as $item) {
+      $item['_weight']['#attributes']['class'] = [$order_class];
+
+      // Remove weight form element from item render array so it can be rendered
+      // in a separate table column.
+      $delta_element = $item['_weight'];
+      unset($item['_weight']);
+
+      $cells = [
+        ['data' => '', 'class' => ['field-multiple-drag']],
+        ['data' => $item],
+        ['data' => $delta_element, 'class' => ['delta-order']],
+      ];
+      $rows[] = [
+        'data' => $cells,
+        'class' => ['draggable'],
+      ];
+    }
+
+    $variables['table'] = [
+      '#type' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+      '#attributes' => [
+        'id' => $table_id,
+        'class' => ['field-multiple-table'],
+      ],
+      '#tabledrag' => [
+        [
+          'action' => 'order',
+          'relationship' => 'sibling',
+          'group' => $order_class,
+        ],
+      ],
+    ];
+
+    if (!empty($element['#description'])) {
+      $description_id = $element['#attributes']['aria-describedby'];
+      $description_attributes['id'] = $description_id;
+      $variables['description']['attributes'] = new Attribute($description_attributes);
+      $variables['description']['content'] = $element['#description'];
+
+      // Add the description's id to the table aria attributes.
+      $variables['table']['#attributes']['aria-describedby'] = $element['#attributes']['aria-describedby'];
+    }
+  }
+  else {
+    $variables['elements'] = [];
+    foreach (Element::children($element) as $key) {
+      $variables['elements'][] = $element[$key];
+    }
+  }
+}
+
+/**
+ * Allow modules to add settings to field widgets provided by other modules.
+ *
+ * @param \Drupal\Core\Field\WidgetInterface $plugin
+ *   The instantiated field widget plugin.
+ * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
+ *   The field definition.
+ * @param string $form_mode
+ *   The entity form mode.
+ * @param array $form
+ *   The (entire) configuration form array.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
+ *
+ * @return array
+ *   Returns the form array to be built.
+ *
+ * @see \Drupal\field_ui\Form\EntityFormDisplayEditForm::thirdPartySettingsForm()
+ */
+function paragraphs_button_field_widget_third_party_settings_form(WidgetInterface $plugin, FieldDefinitionInterface $field_definition, $form_mode, array $form, FormStateInterface $form_state) {
+  $element = [];
+
+  $pluginId = $plugin->getPluginId();
+
+  if ($pluginId == 'entity_reference_paragraphs' || $pluginId == 'paragraphs') {
+
+    $options['bottom'] = t('Bottom');
+    $options['top'] = t('Top');
+
+    $element['paragraphs_button_setting'] = [
+      '#type' => 'select',
+      '#title' => t('Button "Add New" Position'),
+      '#options' => $options,
+      '#default_value' => $plugin->getThirdPartySetting('paragraphs_button', 'paragraphs_button_setting'),
+    ];
+
+  }
+  return $element;
+}
+
+/**
+ * {@inheritdoc}
+ */
+function paragraphs_button_add_more_ajax(array $form, FormStateInterface $form_state) {
+  $button = $form_state->getTriggeringElement();
+  // Go one level up in the form, to the widgets container.
+  $element = NestedArray::getValue($form, array_slice($button['#array_parents'], 0, -2));
+
+  // Add a DIV around the delta receiving the Ajax effect.
+  $delta = $element['#max_delta'];
+  $element[$delta]['#prefix'] = '<div class="ajax-new-content">' . (isset($element[$delta]['#prefix']) ? $element[$delta]['#prefix'] : '');
+  $element[$delta]['#suffix'] = (isset($element[$delta]['#suffix']) ? $element[$delta]['#suffix'] : '') . '</div>';
+
+  $GLOBALS['paragraphs_add_more_js_top'] = 1;
+
+  return $element;
+}

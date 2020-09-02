@@ -1,0 +1,31 @@
+<form {{ attributes }} id="contactForm" name="sentMessage" novalidate="novalidate">
+    <div class="row align-items-stretch mb-5">
+        <div class="col-md-6">
+            <div class="form-group">
+                {{ element.elements.name }}
+                <p class="help-block text-danger"></p>
+            </div>
+            <div class="form-group">
+                {{ element.elements.your_email }}
+                <p class="help-block text-danger"></p>
+            </div>
+            <div class="form-group mb-md-0">
+                {{ element.elements.your_mobile }}
+                <p class="help-block text-danger"></p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group form-group-textarea mb-md-0">
+                {{ element.elements.your_message }}
+                <p class="help-block text-danger"></p>
+            </div>
+        </div>
+    </div>
+    <div class="text-center">
+        {{ element.elements.message }}
+        {{ element.form_build_id }}
+        {{ element.form_token }}
+        {{ element.form_id }}
+        {{ element.actions }}
+    </div>
+</form>

@@ -1,0 +1,18 @@
+framework:
+  css:
+    theme: 
+      https://fonts.googleapis.com/css?family=Montserrat:400,700: { external: true }
+      https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic,700italic: { external: true }
+      https://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700: { external: true }
+      css/styles.css: {}
+      css/team.css: {}
+  js: 
+    https://use.fontawesome.com/releases/v5.13.0/js/all.js: { external: true }
+    https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js: { external: true }
+    https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.bundle.min.js: { external: true }
+    https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js: { external: true }
+    assets/mail/jqBootstrapValidation.js: {}
+    assets/mail/contact_me.js: {}
+    js/scripts.js: {}
+  dependencies:
+    - core/jquery

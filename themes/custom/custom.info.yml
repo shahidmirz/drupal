@@ -1,0 +1,21 @@
+type: theme
+base theme: false
+core: 8.x
+core_version_requirement: ^8 || ^9
+
+name: 'custom'
+description: 'This is my newly custom theme foe new drupal project.'
+package: 'custom'
+
+regions:
+  logo: 'Logo'
+  navigation: 'Navigation'
+  header: 'Top Bar'
+  content: 'Content'  
+  sidebar_first: 'Primary'
+  footer: 'Footer'
+  page_top: 'Page Top'
+  page_bottom: 'Page Bottom'
+
+libraries:
+  - 'custom/framework'

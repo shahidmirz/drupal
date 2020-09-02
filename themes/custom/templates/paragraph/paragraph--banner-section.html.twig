@@ -1,0 +1,9 @@
+<section>
+	<header class="masthead" style="background-image: ('{{ file_url(node.field_image['#items'].entity.uri.value |render|striptags|trim) }}')">
+		<div class="container">
+	    <div class="masthead-subheading">{{ content.field_banner_header_top }}</div>
+	    <div class="masthead-heading text-uppercase">{{ content.field_banner_header }}</div>
+	    	 <a class="btn btn-primary btn-xl text-uppercase js-scroll-trigger" href="{{ content.field_banner_link.0['#url'] }}">{{ content.field_banner_link.0['#title'] }}</a>
+		</div>
+	</header>
+</section>
